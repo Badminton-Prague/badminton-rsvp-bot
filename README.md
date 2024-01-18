@@ -3,7 +3,7 @@ Telegram bot using based on https://github.com/python-telegram-bot/python-telegr
 
 ### Environment Variables
 ```
-webhook = https://{your url}.vercel.app
+WEBHOOK = https://{your url}.vercel.app
 TOKEN = Telegram Bot Token
 ```
 ### Notes
