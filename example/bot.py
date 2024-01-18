@@ -1,3 +1,5 @@
+import asyncio
+
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -6,27 +8,35 @@ from telegram.ext import (
 )
 from os import getenv
 
-# Define a few command handlers.
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(text="hello world!")
-async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(text="help me!")
 
-async def bot_tele(text):
-    # Create application
-    application = (
-        Application.builder().token(getenv("TOKEN")).build()
-    )
 
-    # Add handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help))
+async def run_bot(telegram_update):
+    application = Application.builder().token(getenv("TOKEN")).build()
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("help", help_command))
 
     # Start application
-    await application.bot.set_webhook(url=getenv("WEBHOOK"))
     await application.update_queue.put(
-            Update.de_json(data=text, bot=application.bot)
-        )
+        Update.de_json(data=telegram_update, bot=application.bot)
+    )
+
     async with application:
         await application.start()
         await application.stop()
+
+
+async def set_webhook(url):
+    application = Application.builder().token(getenv("TOKEN")).build()
+    await application.bot.set_webhook(url)
+
+    async with application:
+        await application.start()
+        await application.stop()
+

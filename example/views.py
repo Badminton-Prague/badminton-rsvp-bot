@@ -1,14 +1,16 @@
 import asyncio
 import json
 from django.http import HttpResponse
-from .bot import bot_tele
+from .bot import set_webhook, run_bot
+
 
 def index(request):
     if request.method == 'POST':
         data = request.body
-        res = json.loads(data.decode('utf-8'))
-        print(res)
-        asyncio.run(bot_tele(res))
+        telegram_update = json.loads(data.decode('utf-8'))
+        asyncio.run(run_bot(telegram_update))
         return HttpResponse("ok")
     else:
-        return HttpResponse("hello world!")
+        webhook_url = f'https://{request.META.get("HTTP_HOST", "")}'
+        asyncio.run(set_webhook(webhook_url))
+        return HttpResponse(f'We have set the webhook url to {webhook_url}')
