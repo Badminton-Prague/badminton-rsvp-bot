@@ -10,16 +10,21 @@ from telegram.ext import (
     Application,
     ConversationHandler,
     MessageHandler,
+    CommandHandler,
     filters,
 )
-from .commands import echo
+from .commands import echo, send_qr_with_ms, send_qr_without_ms
 
 
 def run_telegram_bot():
     application = Application.builder().token(getenv("TOKEN")).build()
 
     conv_handler = ConversationHandler(
-        entry_points=[MessageHandler(filters.TEXT, echo)],
+        entry_points=[
+            CommandHandler("qrwithms", send_qr_with_ms),
+            CommandHandler("qrwithoutms", send_qr_without_ms),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
+        ],
         states={},
         fallbacks=[]
     )
