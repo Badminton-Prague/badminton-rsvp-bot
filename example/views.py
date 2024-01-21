@@ -1,16 +1,17 @@
 import asyncio
-import json
+import threading
 from django.http import HttpResponse
-from .bot import set_webhook, run_bot
+from .background_bot import main as run_bot_on_background
+
+
+def run_telegram_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(run_bot_on_background())
 
 
 def index(request):
-    if request.method == 'POST':
-        data = request.body
-        telegram_update = json.loads(data.decode('utf-8'))
-        asyncio.run(run_bot(telegram_update))
-        return HttpResponse("ok")
-    else:
-        webhook_url = f'https://{request.META.get("HTTP_HOST", "")}'
-        asyncio.run(set_webhook(webhook_url))
-        return HttpResponse(f'We have set the webhook url to {webhook_url}')
+    thread = threading.Thread(target=run_telegram_bot)
+    thread.start()
+
+    return HttpResponse("Telegram bot is running in the background.")
