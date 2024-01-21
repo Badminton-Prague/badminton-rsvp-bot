@@ -23,6 +23,7 @@ def run_telegram_bot():
         entry_points=[
             CommandHandler("qrwithms", send_qr_with_ms),
             CommandHandler("qrwithoutms", send_qr_without_ms),
+            CommandHandler("start", echo),
             MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
         ],
         states={},
