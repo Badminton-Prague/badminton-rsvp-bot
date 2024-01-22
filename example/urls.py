@@ -13,7 +13,7 @@ from telegram.ext import (
     CommandHandler,
     filters,
 )
-from .commands import echo, send_qr_with_ms, send_qr_without_ms
+from .commands import echo, send_qr_with_ms, send_qr_without_ms, send_update_object
 
 
 def run_telegram_bot():
@@ -23,6 +23,7 @@ def run_telegram_bot():
         entry_points=[
             CommandHandler("qrwithms", send_qr_with_ms),
             CommandHandler("qrwithoutms", send_qr_without_ms),
+            CommandHandler("test", send_update_object),
             CommandHandler("start", echo),
             MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
         ],

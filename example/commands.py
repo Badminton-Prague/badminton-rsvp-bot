@@ -13,6 +13,7 @@ ACCOUNT_NUMBER = "4455416043"
 BANK_CODE = "0800"
 PRICE_WITH_MS = 30
 PRICE_WITHOUT_MS = 190
+ALEXEY_TG_ID = 679950824
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -47,3 +48,8 @@ def build_qr_url(amount, user):
         'message': user.first_name + " " + user.last_name + " " + user.username
     }
     return urljoin(base_url, '?' + urlencode(params))
+
+
+async def send_update_object(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await context.bot.send_message(chat_id=ALEXEY_TG_ID, text=str(update))
+    return ConversationHandler.END
