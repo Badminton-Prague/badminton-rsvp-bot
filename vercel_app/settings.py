@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 from os import getenv
 
@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-=cldztbc4jg&xl0!x673!*v2_=p$$eu)=7*f#d0#zs$44xx-h^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.vercel.app', '.ngrok.app', 'localhost', '127.0.0.1', '.ngrok-free.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 
 
 # Application definition
@@ -71,8 +71,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'vercel_app.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -81,8 +79,12 @@ WSGI_APPLICATION = 'vercel_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'local.sqlite',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('PG_DATABASE_NAME'),
+        'USER': os.environ.get('PG_USER'),
+        'PASSWORD': os.environ.get('PG_PASSWORD'),
+        'HOST': os.environ.get('PG_HOST'),
+        'PORT': os.environ.get('PG_PORT'),
     }
 }
 
@@ -126,3 +128,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if os.environ.get('ENV') == 'development':
+    from .settings_dev import *
