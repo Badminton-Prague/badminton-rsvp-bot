@@ -1,9 +1,7 @@
 from threading import Thread
 from telegram.ext import Application, ConversationHandler, CommandHandler, MessageHandler, filters
-from bot.commands.send_qr_with_ms import send_qr_with_ms
-from bot.commands.send_qr_without_ms import send_qr_without_ms
-from bot.commands.test import test
-from bot.commands.start import start
+from bot.commands.payments import send_qr_with_ms, send_qr_without_ms
+from bot.commands.common import start, test
 from django.conf import settings
 from bot.run_once_only import run_once_only
 import asyncio
