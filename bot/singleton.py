@@ -1,5 +1,7 @@
 from threading import Thread
 from telegram.ext import Application, ConversationHandler, CommandHandler, MessageHandler, filters
+
+from bot.commands.trainings import new_training, list_trainings
 from bot.commands.send_qr_with_ms import send_qr_with_ms
 from bot.commands.send_qr_without_ms import send_qr_without_ms
 from bot.commands.test import test
@@ -16,6 +18,8 @@ async def _run_telegram_bot_coro():
             CommandHandler("qrwithoutms", send_qr_without_ms),
             CommandHandler("test", test),
             CommandHandler("start", start),
+            CommandHandler("new_training", new_training),
+            CommandHandler("list_trainings", list_trainings),
             MessageHandler(filters.TEXT & ~filters.COMMAND, start)
         ],
         states={},
@@ -28,6 +32,7 @@ async def _run_telegram_bot_coro():
         await telegram_application.initialize()
         await telegram_application.start()
         await telegram_application.updater.start_polling()
+        await asyncio.sleep(100_000_000)
 
 
 def _run_telegram_bot():
