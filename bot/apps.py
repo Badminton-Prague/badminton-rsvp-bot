@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from bot.singleton import start_bot
+import os
 
 
 class BotConfig(AppConfig):
@@ -7,7 +7,10 @@ class BotConfig(AppConfig):
     name = 'bot'
 
     def ready(self):
-        start_bot()
+        bot_enabled = os.environ.get("BOT_ENABLED") == "true"
+        if bot_enabled:
+            from bot.singleton import start_bot
+            start_bot()
 
 
 

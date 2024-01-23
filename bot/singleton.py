@@ -1,5 +1,6 @@
 from threading import Thread
 from telegram.ext import Application, ConversationHandler, CommandHandler, MessageHandler, filters
+from bot.commands.trainings import new_training, list_trainings
 from bot.commands.payments import send_qr_with_ms, send_qr_without_ms
 from bot.commands.common import start, test
 from django.conf import settings
@@ -14,6 +15,8 @@ async def _run_telegram_bot_coro():
             CommandHandler("qrwithoutms", send_qr_without_ms),
             CommandHandler("test", test),
             CommandHandler("start", start),
+            CommandHandler("new_training", new_training),
+            CommandHandler("list_trainings", list_trainings),
             MessageHandler(filters.TEXT & ~filters.COMMAND, start)
         ],
         states={},
