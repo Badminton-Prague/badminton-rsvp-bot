@@ -28,7 +28,6 @@ async def _run_telegram_bot_coro():
         await telegram_application.initialize()
         await telegram_application.start()
         await telegram_application.updater.start_polling()
-        await asyncio.sleep(100_000_000)
 
 
 def _run_telegram_bot():
