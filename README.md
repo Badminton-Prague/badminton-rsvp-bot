@@ -7,6 +7,13 @@ TOKEN = Telegram Bot Token
 BOT_ENABLED=true
 DEVELOPMENT=true # it will use a ./local.sqlite database
 ```
+
+### Kick off local cel
+
+```
+python manage.py migrate
+```
+
 ### Notes
 - Env name is case-sensitive
 
