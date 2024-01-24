@@ -8,7 +8,7 @@ BOT_ENABLED=true
 DEVELOPMENT=true # it will use a ./local.sqlite database
 ```
 
-### Kick off local cel
+### Kick off local dev
 
 ```
 python manage.py migrate
