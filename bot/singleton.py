@@ -1,6 +1,6 @@
 from threading import Thread
-from telegram.ext import Application, ConversationHandler, CommandHandler, MessageHandler, filters
-from bot.commands.trainings import new_training, list_trainings
+from telegram.ext import Application, ConversationHandler, CommandHandler, MessageHandler, filters, PollAnswerHandler
+from bot.commands.trainings import new_training, list_trainings, create_new_poll, list_trainings_polls, receive_poll_answer
 from bot.commands.payments import send_qr_with_ms, send_qr_without_ms
 from bot.commands.common import start, test
 from django.conf import settings
@@ -17,6 +17,8 @@ async def _run_telegram_bot_coro():
             CommandHandler("start", start),
             CommandHandler("new_training", new_training),
             CommandHandler("list_trainings", list_trainings),
+            CommandHandler("list_trainings_polls", list_trainings_polls),
+            CommandHandler("create_new_poll", create_new_poll),
             MessageHandler(filters.TEXT & ~filters.COMMAND, start)
         ],
         states={},
@@ -25,6 +27,7 @@ async def _run_telegram_bot_coro():
 
     telegram_application = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
     telegram_application.add_handler(conv_handler)
+    telegram_application.add_handler(PollAnswerHandler(receive_poll_answer))
     async with telegram_application:
         await telegram_application.initialize()
         await telegram_application.start()
