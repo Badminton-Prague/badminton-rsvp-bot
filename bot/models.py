@@ -19,7 +19,7 @@ class TrainingPoll(models.Model):
     chat_id = models.TextField(max_length=128, db_index=True, default="")
     thread_id = models.TextField(max_length=128, db_index=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
-    max_people = models.DecimalField(default=0, decimal_places=3, max_digits=3)
+    max_people = models.DecimalField(default=0, decimal_places=2, max_digits=5)
 
 class PollVotes(models.Model):
     reference_id = models.TextField(max_length=128, db_index=True, default=uuid.uuid1())
