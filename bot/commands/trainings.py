@@ -8,35 +8,53 @@ from telegram.ext import ContextTypes, ConversationHandler
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from ..asynchronous import aatomic
+from types import SimpleNamespace
 
 
+@aatomic
 async def list_trainings_polls(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    db_trainings = await sync_to_async(lambda: list(TrainingPoll.objects.all()))()
-    trainings = list(
-        map(
-            lambda training: f"reference_id={training.reference_id} timestamp={training.created_at}",
-            db_trainings,
+    try:
+        db_trainings = await sync_to_async(
+            lambda: list(
+                Training.objects.all().values(
+                    "poll__poll_question", "poll__thread_id", "id", "created_at"
+                )
+            )
+        )()
+        db_training_objects = list(map(lambda x: SimpleNamespace(**x), db_trainings))
+        trainings = list(
+            map(
+                lambda training: f"reference_id={training.id} timestamp={training.created_at} poll question={training.poll__poll_question} thread id={training.poll__thread_id}",
+                db_training_objects,
+            )
         )
-    )
-    await update.message.reply_text(text="\n".join(trainings))
-    return ConversationHandler.END
+        await update.message.reply_text(text="\n".join(trainings))
+
+    except Exception as exception:
+        await update.message.reply_html(
+            f"Error occurred while listing all polls:\n{exception.message}\n{exception.args}",
+        )
+        raise exception
+
+    finally:
+        return ConversationHandler.END
 
 
 @aatomic
 async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Sends a predefined poll"""
 
-    command = context.args
-
-    max_people = int(command[2].strip())  # Max people in a format: "24"
-    thread_name = f"Game: {command[0]}"  # Thread name in a format WHEN: "DD.MM.YYYY,day,HH:MM-HH:MM"
-    poll_question = f"{command[1]}, Max people: {max_people}"
-    poll_options = settings.POLL_OPTIONS
-    chat_id = settings.BADMINTON_CHAT_ID
-
     try:
+        command = context.args
+
+        max_people = int(command[2].strip())  # Max people in a format: "24"
+        thread_name = f"Game: {command[0]}"  # Thread name in a format WHEN: "DD.MM.YYYY,day,HH:MM-HH:MM"
+        poll_question = f"{command[1]}, Max people: {max_people}"
+        poll_options = settings.POLL_OPTIONS
+        chat_id = settings.BADMINTON_CHAT_ID
+
         poll = await sync_to_async(
             lambda: Poll.objects.create(
                 chat_id=chat_id, poll_question=poll_question, thread_name=thread_name
@@ -67,11 +85,13 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )()
 
         await context.bot.pin_chat_message(message.chat_id, message.message_id)
+
     except Exception as exception:
         await update.message.reply_html(
             f"Error occurred while posting a new training poll:\n{exception.message}\n{exception.args}",
         )
         raise exception
+
     finally:
         return ConversationHandler.END
 
@@ -113,7 +133,7 @@ async def receive_poll_answer(
             )()
 
             vote = result[0]
-            setattr(vote, 'go', selected_option == settings.POLL_GO_OPTION)
+            setattr(vote, "go", selected_option == settings.POLL_GO_OPTION)
             await sync_to_async(lambda: vote.save())()
 
     except Exception as exception:
