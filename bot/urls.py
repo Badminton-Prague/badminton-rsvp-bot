@@ -4,5 +4,5 @@ from bot.views import index
 
 
 urlpatterns = [
-    path('', index),
+    path("", index),
 ]

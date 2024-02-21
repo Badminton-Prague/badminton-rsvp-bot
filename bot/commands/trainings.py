@@ -1,36 +1,26 @@
 from telegram.constants import ParseMode
 
 from ..models import Training
-from ..models import TrainingPoll
+from ..models import Poll
+from ..models import PollVote
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from asgiref.sync import sync_to_async
 from datetime import datetime, timedelta
-
-bp_chat_id = -1002144970823
-
-async def new_training(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    training = await sync_to_async(lambda: Training.objects.create(reference_id="test"))()
-    await update.message.reply_text(text=str(training.created_at))
-    return ConversationHandler.END
+from django.conf import settings
 
 
-async def list_trainings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    db_trainings = await sync_to_async(lambda: list(Training.objects.all()))()
-    trainings = list(map(
-        lambda training: f'reference_id={training.reference_id} timestamp={training.created_at}',
-        db_trainings
-    ))
-    await update.message.reply_text(text='\n'.join(trainings))
-    return ConversationHandler.END
-
-async def list_trainings_polls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def list_trainings_polls(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
     db_trainings = await sync_to_async(lambda: list(TrainingPoll.objects.all()))()
-    trainings = list(map(
-        lambda training: f'reference_id={training.reference_id} timestamp={training.created_at}',
-        db_trainings
-    ))
-    await update.message.reply_text(text='\n'.join(trainings))
+    trainings = list(
+        map(
+            lambda training: f"reference_id={training.reference_id} timestamp={training.created_at}",
+            db_trainings,
+        )
+    )
+    await update.message.reply_text(text="\n".join(trainings))
     return ConversationHandler.END
 
 
@@ -39,39 +29,60 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     command = context.args
 
-    thread_name = command[0]  # Thread name in a format WHEN: "DD.MM.YYYY,day,HH:MM-HH:MM"
-    poll_header = command[1]  # poll header in a format WHERE: "Place,courts"
-    max_people = command[2]  # Max people in a format: "24"
-    poll_options = ["Go!", "No go", "Just looking"]
+    max_people = int(command[2].strip())  # Max people in a format: "24"
+    thread_name = f"Game: {command[0]}"  # Thread name in a format WHEN: "DD.MM.YYYY,day,HH:MM-HH:MM"
+    poll_question = f"{command[1]}, Max people: {max_people}"
+    poll_options = settings.POLL_OPTIONS
+    chat_id = settings.BADMINTON_CHAT_ID
 
-    new_topic = await context.bot.createForumTopic(bp_chat_id, f"Game: {thread_name}")
-    message = await context.bot.send_poll(
-        bp_chat_id,
-        poll_header + f", Max people: {max_people}",
-        poll_options,
-        is_anonymous=False,
-        allows_multiple_answers=False,
-        message_thread_id=new_topic.message_thread_id,
-    )
-    await context.bot.pin_chat_message(message.chat_id, message.message_id)
+    try:
+        poll = await sync_to_async(
+            lambda: Poll.objects.create(
+                chat_id=chat_id, poll_question=poll_question, thread_name=thread_name
+            )
+        )()
+        await sync_to_async(
+            lambda: Training.objects.create(poll=poll, max_people=max_people)
+        )()
 
-    training = await sync_to_async(lambda: TrainingPoll.objects.create(
-        thread_name=thread_name,
-        poll_header=poll_header,
-        message_id=message.message_id,
-        poll_id=message.poll.id,
-        chat_id=update.effective_chat.id,
-        thread_id=message.message_thread_id,
-        max_people=max_people
-    ))()
+        new_topic = await context.bot.createForumTopic(
+            settings.BADMINTON_CHAT_ID, thread_name
+        )
+        message = await context.bot.send_poll(
+            settings.BADMINTON_CHAT_ID,
+            poll_question,
+            poll_options,
+            is_anonymous=False,
+            allows_multiple_answers=False,
+            message_thread_id=new_topic.message_thread_id,
+        )
 
-    return ConversationHandler.END
+        await sync_to_async(
+            lambda: Poll.objects.filter(pk=poll.pk).update(
+                thread_id=message.message_thread_id,
+                message_id=message.message_id,
+                poll_id=message.poll.id,
+            )
+        )()
 
-async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        await context.bot.pin_chat_message(message.chat_id, message.message_id)
+    except Exception as exception:
+        await update.message.reply_html(
+            f"Error occurred while posting a new training poll:\n{exception.message}\n{exception.args}",
+        )
+    finally:
+        return ConversationHandler.END
+
+
+async def receive_poll_answer(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
     """Summarize a users poll vote"""
     answer = update.poll_answer
 
-    db_poll: TrainingPoll = await sync_to_async(lambda: TrainingPoll.objects.filter(poll_id=answer.poll_id).first())()
+    db_poll: TrainingPoll = await sync_to_async(
+        lambda: TrainingPoll.objects.filter(poll_id=answer.poll_id).first()
+    )()
 
     poll_options = ["Go!", "No go", "Just looking"]
     selected_options = answer.option_ids
@@ -85,13 +96,13 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.send_message(
             bp_chat_id,
             f"{update.effective_user.mention_html()} voted for {answer_string} in a poll {db_poll.thread_name}",
-            parse_mode=ParseMode.HTML
+            parse_mode=ParseMode.HTML,
         )
     else:
         await context.bot.send_message(
             bp_chat_id,
             f"{update.effective_user.mention_html()} unvoted in a poll {db_poll.thread_name}",
-            parse_mode=ParseMode.HTML
+            parse_mode=ParseMode.HTML,
         )
 
     return ConversationHandler.END
