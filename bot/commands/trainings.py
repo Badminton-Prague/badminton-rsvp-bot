@@ -6,8 +6,8 @@ from ..models import PollVote
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from asgiref.sync import sync_to_async
-from datetime import datetime, timedelta
 from django.conf import settings
+from ..asynchronous import aatomic
 
 
 async def list_trainings_polls(
@@ -24,6 +24,7 @@ async def list_trainings_polls(
     return ConversationHandler.END
 
 
+@aatomic
 async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Sends a predefined poll"""
 
@@ -70,39 +71,56 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.message.reply_html(
             f"Error occurred while posting a new training poll:\n{exception.message}\n{exception.args}",
         )
+        raise exception
     finally:
         return ConversationHandler.END
 
 
+@aatomic
 async def receive_poll_answer(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Summarize a users poll vote"""
     answer = update.poll_answer
 
-    db_poll: TrainingPoll = await sync_to_async(
-        lambda: TrainingPoll.objects.filter(poll_id=answer.poll_id).first()
-    )()
+    try:
+        poll = await sync_to_async(
+            lambda: Poll.objects.filter(poll_id=answer.poll_id).first()
+        )()
+        if poll is None:
+            return ConversationHandler.END
 
-    poll_options = ["Go!", "No go", "Just looking"]
-    selected_options = answer.option_ids
-    answer_string = ""
-    for question_id in selected_options:
-        if question_id != selected_options[-1]:
-            answer_string += poll_options[question_id] + " and "
+        selected_option_ids = answer.option_ids
+        if len(selected_option_ids) == 0:
+            await sync_to_async(
+                lambda: PollVote.objects.filter(
+                    poll=poll, user_id=update.effective_user.id
+                ).delete()
+            )()
         else:
-            answer_string += poll_options[question_id]
-    if answer_string != "":
-        await context.bot.send_message(
-            bp_chat_id,
-            f"{update.effective_user.mention_html()} voted for {answer_string} in a poll {db_poll.thread_name}",
-            parse_mode=ParseMode.HTML,
-        )
-    else:
-        await context.bot.send_message(
-            bp_chat_id,
-            f"{update.effective_user.mention_html()} unvoted in a poll {db_poll.thread_name}",
-            parse_mode=ParseMode.HTML,
-        )
+            selected_option = settings.POLL_OPTIONS[selected_option_ids[0]]
+            if (
+                selected_option != settings.POLL_GO_OPTION
+                and selected_option != settings.POLL_NO_GO_OPTION
+            ):
+                return ConversationHandler.END
 
-    return ConversationHandler.END
+            result = await sync_to_async(
+                lambda: PollVote.objects.get_or_create(
+                    poll_id=poll.pk,
+                    user_id=update.effective_user.id,
+                )
+            )()
+
+            vote = result[0]
+            setattr(vote, 'go', selected_option == settings.POLL_GO_OPTION)
+            await sync_to_async(lambda: vote.save())()
+
+    except Exception as exception:
+        await update.message.reply_html(
+            f"Error occurred while posting a new training poll:\n{exception.message}\n{exception.args}",
+        )
+        raise exception
+
+    finally:
+        return ConversationHandler.END
