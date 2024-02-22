@@ -26,7 +26,7 @@ async def _run_telegram_bot_coro():
             CommandHandler("qrwithoutms", send_qr_without_ms),
             CommandHandler("test", test),
             CommandHandler("start", start),
-            CommandHandler("list_trainings_polls", list_trainings_polls),
+            CommandHandler("list_training_polls", list_trainings_polls),
             CommandHandler("create_new_poll", create_new_poll),
             MessageHandler(filters.TEXT & ~filters.COMMAND, start),
         ],

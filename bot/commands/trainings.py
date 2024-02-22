@@ -3,6 +3,7 @@ from telegram.constants import ParseMode
 from ..models import Training
 from ..models import Poll
 from ..models import PollVote
+from ..models import TelegramUser
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from asgiref.sync import sync_to_async
@@ -102,7 +103,7 @@ async def receive_poll_answer(
 ) -> int:
     """Summarize a users poll vote"""
     answer = update.poll_answer
-
+    effective_user = update.effective_user
     try:
         poll = await sync_to_async(
             lambda: Poll.objects.filter(poll_id=answer.poll_id).first()
@@ -110,11 +111,22 @@ async def receive_poll_answer(
         if poll is None:
             return ConversationHandler.END
 
+        telegram_user, created = await sync_to_async(
+            lambda: TelegramUser.objects.get_or_create(telegram_id=effective_user.id)
+        )()
+        await sync_to_async(
+            lambda: TelegramUser.objects.filter(pk=telegram_user.pk).update(
+                first_name=effective_user.first_name,
+                last_name=effective_user.last_name,
+                username=effective_user.username,
+            )
+        )()
+
         selected_option_ids = answer.option_ids
         if len(selected_option_ids) == 0:
             await sync_to_async(
                 lambda: PollVote.objects.filter(
-                    poll=poll, user_id=update.effective_user.id
+                    poll=poll, telegram_user=telegram_user
                 ).delete()
             )()
         else:
@@ -125,16 +137,15 @@ async def receive_poll_answer(
             ):
                 return ConversationHandler.END
 
-            result = await sync_to_async(
+            poll_vote, created = await sync_to_async(
                 lambda: PollVote.objects.get_or_create(
                     poll_id=poll.pk,
-                    user_id=update.effective_user.id,
+                    telegram_user=telegram_user
                 )
             )()
 
-            vote = result[0]
-            setattr(vote, "go", selected_option == settings.POLL_GO_OPTION)
-            await sync_to_async(lambda: vote.save())()
+            setattr(poll_vote, "go", selected_option == settings.POLL_GO_OPTION)
+            await sync_to_async(lambda: poll_vote.save())()
 
     except Exception as exception:
         await update.message.reply_html(

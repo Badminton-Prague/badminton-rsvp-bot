@@ -12,6 +12,7 @@ class Poll(models.Model):
     message_id = models.IntegerField(db_index=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Training(models.Model):
@@ -19,16 +20,27 @@ class Training(models.Model):
     poll = models.OneToOneField(
         Poll, on_delete=models.CASCADE, db_index=True, null=True
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class TelegramUser(models.Model):
+    telegram_id = models.IntegerField(db_index=True, unique=True)
+    first_name = models.CharField(max_length=512, default="")
+    last_name = models.CharField(max_length=512, default="")
+    username = models.CharField(max_length=512, default="")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class PollVote(models.Model):
-    class Meta:
-        index_together = [
-            ("user_id", "poll"),
-        ]
-
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
-    user_id = models.IntegerField(db_index=True)
+    telegram_user = models.OneToOneField(
+        TelegramUser, on_delete=models.CASCADE, null=True
+    )
     go = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
