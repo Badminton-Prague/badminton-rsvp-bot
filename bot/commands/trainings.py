@@ -54,7 +54,7 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         thread_name = f"Game: {command[0]}"  # Thread name in a format WHEN: "DD.MM.YYYY,day,HH:MM-HH:MM"
         poll_question = f"{command[1]}, Max people: {max_people}"
         poll_options = settings.POLL_OPTIONS
-        chat_id = settings.BADMINTON_CHAT_ID
+        chat_id = settings.DIMA_B_TEST_CHAT_ID
 
         poll = await sync_to_async(
             lambda: Poll.objects.create(
@@ -66,10 +66,10 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )()
 
         new_topic = await context.bot.createForumTopic(
-            settings.BADMINTON_CHAT_ID, thread_name
+            chat_id, thread_name
         )
         message = await context.bot.send_poll(
-            settings.BADMINTON_CHAT_ID,
+            chat_id,
             poll_question,
             poll_options,
             is_anonymous=False,
@@ -149,7 +149,7 @@ async def receive_poll_answer(
 
     except Exception as exception:
         await update.message.reply_html(
-            f"Error occurred while posting a new training poll:\n{exception.message}\n{exception.args}",
+            f"Error occurred while receiving poll answer:\n{exception.message}\n{exception.args}",
         )
         raise exception
 
