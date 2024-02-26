@@ -155,3 +155,33 @@ async def receive_poll_answer(
 
     finally:
         return ConversationHandler.END
+
+
+async def list_poll_votes(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    try:
+        db_votes = await sync_to_async(
+            lambda: list(
+                PollVote.objects.filter(thread_id=update.message.message_thread_id).values(
+                    "telegram_user__first_name"
+                )
+            )
+        )()
+        db_votes_objects = list(map(lambda x: SimpleNamespace(**x), db_votes))
+        votes = list(
+            map(
+                lambda
+                    vote2: f"reference_id={vote2.id} timestamp={vote2.created_at} telegram_user__first_name={vote2.telegram_user__first_name}",
+                db_votes_objects,
+            )
+        )
+        await update.message.reply_text(text="\n".join(votes))
+    except Exception as exception:
+        await update.message.reply_html(
+            f"Error occurred while listing all votes for poll:\n{exception.message}\n{exception.args}",
+        )
+        raise exception
+
+    finally:
+        return ConversationHandler.END
