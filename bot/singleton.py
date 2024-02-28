@@ -28,7 +28,6 @@ async def _run_telegram_bot_coro():
             CommandHandler("start", start),
             CommandHandler("list_training_polls", list_trainings_polls),
             CommandHandler("create_new_poll", create_new_poll),
-            MessageHandler(filters.TEXT & ~filters.COMMAND, start),
         ],
         states={},
         fallbacks=[],

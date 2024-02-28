@@ -2,13 +2,13 @@ from django.db import models
 
 
 class Poll(models.Model):
-    thread_name = models.TextField(max_length=128, db_index=True, default="")
+    thread_name = models.TextField(max_length=128, db_index=True)
     thread_id = models.IntegerField(db_index=True, null=True)
 
-    poll_question = models.TextField(max_length=128, db_index=True, default="")
+    poll_question = models.TextField(max_length=128, db_index=True)
     poll_id = models.TextField(max_length=128, db_index=True, null=True)
 
-    chat_id = models.IntegerField(db_index=True, default=0)
+    chat_id = models.BigIntegerField(db_index=True)
     message_id = models.IntegerField(db_index=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -26,7 +26,7 @@ class Training(models.Model):
 
 
 class TelegramUser(models.Model):
-    telegram_id = models.IntegerField(db_index=True, unique=True)
+    telegram_id = models.BigIntegerField(db_index=True, unique=True)
     first_name = models.CharField(max_length=512, default="")
     last_name = models.CharField(max_length=512, default="")
     username = models.CharField(max_length=512, default="")

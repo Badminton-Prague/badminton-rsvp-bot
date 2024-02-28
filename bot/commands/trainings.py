@@ -10,6 +10,7 @@ from asgiref.sync import sync_to_async
 from django.conf import settings
 from ..asynchronous import aatomic
 from types import SimpleNamespace
+import traceback
 
 
 @aatomic
@@ -87,11 +88,11 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         await context.bot.pin_chat_message(message.chat_id, message.message_id)
 
-    except Exception as exception:
+    except Exception as ex:
         await update.message.reply_html(
-            f"Error occurred while posting a new training poll:\n{exception.message}\n{exception.args}",
+            f"Error occurred while posting a new training poll:\n{str(ex)}\n{'n'.join(traceback.format_tb(ex.__traceback__, 5))}",
         )
-        raise exception
+        raise ex
 
     finally:
         return ConversationHandler.END
@@ -139,8 +140,7 @@ async def receive_poll_answer(
 
             poll_vote, created = await sync_to_async(
                 lambda: PollVote.objects.get_or_create(
-                    poll_id=poll.pk,
-                    telegram_user=telegram_user
+                    poll_id=poll.pk, telegram_user=telegram_user
                 )
             )()
 
