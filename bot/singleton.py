@@ -7,11 +7,11 @@ from telegram.ext import (
     filters,
     PollAnswerHandler,
 )
-from bot.commands.trainings import (
-    create_new_poll,
-    list_trainings_polls,
-    receive_poll_answer,
-)
+from bot.commands.list_training_polls import list_trainings_polls
+from bot.commands.create_new_poll import create_new_poll
+from bot.commands.plus_handler import plus_handler
+from bot.commands.receive_poll_answer import receive_poll_answer
+from bot.commands.list_poll_votes import list_poll_votes
 from bot.commands.payments import send_qr_with_ms, send_qr_without_ms
 from bot.commands.common import start, test
 from django.conf import settings
@@ -27,7 +27,9 @@ async def _run_telegram_bot_coro():
             CommandHandler("test", test),
             CommandHandler("start", start),
             CommandHandler("list_training_polls", list_trainings_polls),
+            CommandHandler("list_poll_votes", list_poll_votes),
             CommandHandler("create_new_poll", create_new_poll),
+            CommandHandler("1", plus_handler),
         ],
         states={},
         fallbacks=[],

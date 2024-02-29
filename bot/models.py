@@ -20,6 +20,7 @@ class Training(models.Model):
     poll = models.OneToOneField(
         Poll, on_delete=models.CASCADE, db_index=True, null=True
     )
+    when = models.TextField(max_length=512, default="")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -34,12 +35,17 @@ class TelegramUser(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def message_username(self):
+        if self.username:
+            return f"@{self.username} (id: {self.telegram_id})"
+        else:
+            return f"{self.first_name} {self.last_name} (id: {self.telegram_id})"
+
 
 class PollVote(models.Model):
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
-    telegram_user = models.OneToOneField(
-        TelegramUser, on_delete=models.CASCADE, null=True
-    )
+    telegram_user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, null=True)
     go = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
