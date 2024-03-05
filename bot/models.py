@@ -28,9 +28,9 @@ class Training(models.Model):
 
 class TelegramUser(models.Model):
     telegram_id = models.BigIntegerField(db_index=True, unique=True)
-    first_name = models.CharField(max_length=512, default="")
-    last_name = models.CharField(max_length=512, default="")
-    username = models.CharField(max_length=512, default="")
+    first_name = models.CharField(max_length=512, null=True)
+    last_name = models.CharField(max_length=512, null=True)
+    username = models.CharField(max_length=512, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
