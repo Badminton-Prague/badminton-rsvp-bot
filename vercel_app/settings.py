@@ -31,6 +31,7 @@ SECRET_KEY = "django-insecure-=cldztbc4jg&xl0!x673!*v2_=p$$eu)=7*f#d0#zs$44xx-h^
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".herokuapp.com", "rsvp.valt.me"]
+CSRF_TRUSTED_ORIGINS = ["https://rsvp.valt.me"]
 
 
 # Application definition
@@ -115,6 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CSRF_TRUSTED_ORIGINS = ["https://front.bluemix.net"]
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
