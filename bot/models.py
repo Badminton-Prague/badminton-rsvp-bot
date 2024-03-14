@@ -18,7 +18,11 @@ class Poll(models.Model):
 class Training(models.Model):
     max_people = models.IntegerField(default=0)
     poll = models.OneToOneField(
-        Poll, on_delete=models.CASCADE, db_index=True, null=True
+        Poll,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=True,
+        related_name="training",
     )
     date = models.DateField(null=True)
 
@@ -41,6 +45,9 @@ class TelegramUser(models.Model):
             return f"@{self.username} (id: {self.telegram_id})"
         else:
             return f"{self.first_name} {self.last_name} (id: {self.telegram_id})"
+
+    def __str__(self):
+        return self.message_username
 
 
 class PollVote(models.Model):
