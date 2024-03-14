@@ -1,0 +1,42 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:11
+    command: ["postgres", "-c", "log_statement=mod"]
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - bot_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: badminton
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: badminton
+    healthcheck:
+      test: "pg_isready -U postgres"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    image: python:3.12.1-slim-bullseye
+    depends_on:
+      - db
+    ports:
+      - 8080:8080
+    restart: always
+    command: /bin/bash /scripts/docker.sh
+    environment:
+      DATABASE_URL: postgres://postgres:badminton@db:5432/badminton
+    env_file:
+      - .env
+    volumes:
+      - ./bot:/bot
+      - ./vercel_app:/vercel_app
+      - ./requirements.txt:/requirements.txt
+      - ./manage.py:/manage.py
+      - ./scripts/docker.sh:/scripts/docker.sh
+      - bot_venv:/venv
+volumes:
+  bot_db_data:
+  bot_venv:
