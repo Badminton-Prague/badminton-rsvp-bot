@@ -20,7 +20,7 @@ class Training(models.Model):
     poll = models.OneToOneField(
         Poll, on_delete=models.CASCADE, db_index=True, null=True
     )
-    when = models.TextField(max_length=512, default="")
+    date = models.DateField(null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

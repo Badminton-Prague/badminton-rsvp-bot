@@ -23,7 +23,7 @@ async def list_poll_votes(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         training = await get_training_by_thread_id(update.message.message_thread_id)
         votes = list(
             map(
-                lambda vote: f"User {vote.telegram_user.message_username} {'will' if vote.go else 'will NOT'} attend training on {training.when}",
+                lambda vote: f"User {vote.telegram_user.message_username} {'will' if vote.go else 'will NOT'} attend training on {training.date}",
                 db_votes,
             )
         )

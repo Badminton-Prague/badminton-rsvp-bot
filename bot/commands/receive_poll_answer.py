@@ -37,7 +37,7 @@ async def receive_poll_answer(
             if selected_option == settings.POLL_GO_OPTION:
                 await record_vote(poll, telegram_user)
 
-                text_message = f"User {telegram_user.message_username} will attend training on {training.when}"
+                text_message = f"User {telegram_user.message_username} will attend training on {training.date}"
                 await context.bot.send_message(
                     chat_id=poll.chat_id,
                     message_thread_id=poll.thread_id,
@@ -51,7 +51,7 @@ async def receive_poll_answer(
             elif selected_option == settings.POLL_NO_GO_OPTION:
                 await retract_first_vote(poll, telegram_user)
 
-                text_message = f"User {telegram_user.message_username} will NOT attend training on {training.when}"
+                text_message = f"User {telegram_user.message_username} will NOT attend training on {training.date}"
                 await context.bot.send_message(
                     chat_id=poll.chat_id,
                     message_thread_id=poll.thread_id,

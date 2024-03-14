@@ -24,7 +24,7 @@ async def plus_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         await record_vote(training.poll, telegram_user)
 
         # Submit a notification
-        text_message = f"User {telegram_user.message_username} will attend training on {training.when}"
+        text_message = f"User {telegram_user.message_username} will attend training on {training.date}"
         await update.message.reply_text(text_message)
         await context.bot.send_message(
             chat_id=settings.SYSTEM_LOG_CHAT_ID,

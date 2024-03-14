@@ -6,6 +6,8 @@ from telegram.ext import ContextTypes, ConversationHandler
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from ..asynchronous import aatomic
+import re
+from datetime import date
 
 
 @aatomic
@@ -13,14 +15,18 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """Sends a predefined poll"""
 
     try:
-        command = context.args
+        lines = update.message.text.split("\n")
+        thread_name = lines[1].strip()
+        poll_question = lines[2].strip()
+        max_people = int(lines[3].strip())
 
-        when = command[0]
-        courts = command[1]
-        max_people = int(command[2].strip())
+        date_string = lines[4].strip()
+        date_matches = re.match("^(\d{4})-(\d{2})-(\d{2})$", date_string)
+        date_year = int(date_matches[1])
+        date_month = int(date_matches[2])
+        date_day = int(date_matches[3])
+        training_day = date(date_year, date_month, date_day)
 
-        thread_name = f"Game: {when}"  # Thread name in a format WHEN: "DD.MM.YYYY,day,HH:MM-HH:MM"
-        poll_question = f"{courts}, Max people: {max_people}"
         poll_options = settings.POLL_OPTIONS
         chat_id = settings.BADMINTON_CHAT_ID
 
@@ -30,7 +36,9 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
         )()
         await sync_to_async(
-            lambda: Training.objects.create(poll=poll, max_people=max_people, when=when)
+            lambda: Training.objects.create(
+                poll=poll, max_people=max_people, date=training_day
+            )
         )()
 
         new_topic = await context.bot.createForumTopic(
