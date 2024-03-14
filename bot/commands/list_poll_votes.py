@@ -27,9 +27,11 @@ async def list_poll_votes(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 db_votes,
             )
         )
-        attendees = "\n".join(votes[:training.max_people])
-        waiting_list = "\n".join(votes[training.max_people:])
-        await update.message.reply_html(f"Attendees:\n{attendees}\n\n\nWaiting list:\n{waiting_list}")
+        attendees = "\n".join(votes[: training.max_people])
+        waiting_list = "\n".join(votes[training.max_people :])
+        await update.message.reply_html(
+            f"Attendees:\n{attendees}\n\n\nWaiting list:\n{waiting_list}"
+        )
     except Exception as exception:
         await update.message.reply_html(
             format_exception("listing poll votes", exception)

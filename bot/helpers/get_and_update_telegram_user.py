@@ -17,7 +17,7 @@ async def get_and_update_telegram_user(effective_user: User) -> TelegramUser:
     )()
 
     telegram_user.first_name = effective_user.first_name
-    telegram_user.last_name=effective_user.last_name
-    telegram_user.username=effective_user.username
+    telegram_user.last_name = effective_user.last_name
+    telegram_user.username = effective_user.username
 
     return telegram_user
