@@ -34,7 +34,7 @@ class TrainingAdmin(admin.ModelAdmin):
         ordering="poll__poll_question", description="Training's Poll Question"
     )
     def get_poll_question(self, obj):
-        return obj.poll.thread_name
+        return obj.poll.poll_question
 
 
 class TelegramUserAdmin(admin.ModelAdmin):
