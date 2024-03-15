@@ -26,11 +26,13 @@ class TrainingAdmin(admin.ModelAdmin):
         "created_at",
     )
 
-    @admin.display(ordering="poll__thread_name", description="Poll Name")
+    @admin.display(ordering="poll__thread_name", description="Training's Thread Name")
     def get_poll_tread_name(self, obj):
         return obj.poll.thread_name
 
-    @admin.display(ordering="poll__poll_question", description="Poll Question")
+    @admin.display(
+        ordering="poll__poll_question", description="Training's Poll Question"
+    )
     def get_poll_question(self, obj):
         return obj.poll.thread_name
 
@@ -42,7 +44,7 @@ class TelegramUserAdmin(admin.ModelAdmin):
 
 class AttendeeAdmin(admin.ModelAdmin):
     list_display = (
-        "get_training_poll_name",
+        "get_training_thread_name",
         "get_telegram_user",
         "go",
         "source",
@@ -63,9 +65,9 @@ class AttendeeAdmin(admin.ModelAdmin):
     )
 
     @admin.display(
-        ordering="training__poll__thread_name", description="Training's Poll Name"
+        ordering="training__poll__thread_name", description="Training's Thread Name"
     )
-    def get_training_poll_name(self, obj):
+    def get_training_thread_name(self, obj):
         return obj.training.poll.thread_name
 
     @admin.display(ordering="telegram_user__id", description="Telegram user")
