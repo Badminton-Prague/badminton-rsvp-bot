@@ -38,7 +38,9 @@ async def list_trainings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
 
     except Exception as exception:
-        await update.message.reply_html(format_exception("listing trainings", exception))
+        await update.message.reply_html(
+            format_exception("listing trainings", exception)
+        )
 
     finally:
         return ConversationHandler.END
