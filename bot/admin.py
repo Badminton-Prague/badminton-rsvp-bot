@@ -14,7 +14,7 @@ class TrainingAdmin(admin.ModelAdmin):
         "get_poll_tread_name",
         "get_poll_question",
         "date",
-        "max_people",
+        "attendees_limit",
         "created_at",
     )
     search_fields = (
@@ -22,7 +22,7 @@ class TrainingAdmin(admin.ModelAdmin):
         "poll__thread_name",
         "poll__poll_question",
         "date",
-        "max_people",
+        "attendees_limit",
         "created_at",
     )
 

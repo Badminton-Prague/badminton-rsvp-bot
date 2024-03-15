@@ -11,10 +11,11 @@ from datetime import date
 
 
 @aatomic
-async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Sends a predefined poll"""
 
     try:
+
         lines = update.message.text.split("\n")
         thread_name = lines[1].strip()
         poll_question = lines[2].strip()
@@ -65,7 +66,7 @@ async def create_new_poll(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     except Exception as exception:
         await update.message.reply_html(
-            format_exception("posting a new poll", exception)
+            format_exception("posting a new training", exception)
         )
 
     finally:

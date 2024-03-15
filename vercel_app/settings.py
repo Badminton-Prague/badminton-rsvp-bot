@@ -81,6 +81,7 @@ SYSTEM_LOG_THREAD_ID = int(getenv("SYSTEM_LOG_THREAD_ID", "236"))
 POLL_GO_OPTION = "Go!"
 POLL_NO_GO_OPTION = "No Go"
 POLL_OPTIONS = [POLL_GO_OPTION, POLL_NO_GO_OPTION, "Just looking"]
+ADMIN_USER_IDS = map(lambda id: int(id), getenv("ADMIN_USER_IDS", "0").split(","))
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

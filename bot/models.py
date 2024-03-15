@@ -16,7 +16,7 @@ class Poll(models.Model):
 
 
 class Training(models.Model):
-    max_people = models.IntegerField(default=0)
+    attendees_limit = models.IntegerField(default=0)
     poll = models.OneToOneField(
         Poll,
         on_delete=models.CASCADE,
