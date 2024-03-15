@@ -11,7 +11,7 @@ from ..helpers.safe_get import safe_get
 @aatomic
 async def list_trainings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
-        most_recent_count = safe_get(context.args, 0, 10)
+        most_recent_count = int(safe_get(context.args, 0, 10))
 
         db_trainings = await sync_to_async(
             lambda: list(
@@ -38,7 +38,7 @@ async def list_trainings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
 
     except Exception as exception:
-        await update.message.reply_html(format_exception("listing polls", exception))
+        await update.message.reply_html(format_exception("listing trainings", exception))
 
     finally:
         return ConversationHandler.END
