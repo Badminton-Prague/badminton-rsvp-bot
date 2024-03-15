@@ -8,9 +8,7 @@ from ..helpers.format_exception import format_exception
 
 
 @aatomic
-async def list_trainings_polls(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> int:
+async def list_trainings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
         db_trainings = await sync_to_async(
             lambda: list(

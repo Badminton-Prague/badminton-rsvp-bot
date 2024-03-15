@@ -2,11 +2,12 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from bot.asynchronous import aatomic
 from bot.helpers.get_training_by_poll_id import get_training_by_poll_id
-from bot.helpers.record_vote import record_vote
+from bot.helpers.record_attendee import record_attendee
 from bot.helpers.retract_first_vote import retract_first_vote
 from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_user
 from django.conf import settings
 from ..helpers.format_exception import format_exception
+from ..models import POLL_VOTE_SOURCE
 
 
 @aatomic
@@ -30,12 +31,12 @@ async def receive_poll_answer(
         # Record a vote
         selected_option_ids = poll_answer.option_ids
         if len(selected_option_ids) == 0:
-            await retract_first_vote(poll, telegram_user)
+            await retract_first_vote(training, telegram_user)
         else:
             selected_option = settings.POLL_OPTIONS[selected_option_ids[0]]
 
             if selected_option == settings.POLL_GO_OPTION:
-                await record_vote(poll, telegram_user)
+                await record_attendee(training, telegram_user, POLL_VOTE_SOURCE)
 
                 text_message = f"User {telegram_user.message_username} will attend training on {training.date}"
                 await context.bot.send_message(
@@ -49,7 +50,7 @@ async def receive_poll_answer(
                     text=text_message,
                 )
             elif selected_option == settings.POLL_NO_GO_OPTION:
-                await retract_first_vote(poll, telegram_user)
+                await retract_first_vote(training, telegram_user)
 
                 text_message = f"User {telegram_user.message_username} will NOT attend training on {training.date}"
                 await context.bot.send_message(

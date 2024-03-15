@@ -5,32 +5,32 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from bot.helpers.get_training_by_thread_id import get_training_by_thread_id
-from bot.models import PollVote
+from bot.models import Attendee
 from ..helpers.format_exception import format_exception
 
 
-async def list_poll_votes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def list_attendees(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
-        db_votes = await sync_to_async(
+        db_attendees = await sync_to_async(
             lambda: list(
-                PollVote.objects.filter(
-                    poll__thread_id=update.message.message_thread_id, go=True
+                Attendee.objects.filter(
+                    training__poll__thread_id=update.message.message_thread_id, go=True
                 )
                 .order_by("id")
                 .prefetch_related("telegram_user")
             )
         )()
         training = await get_training_by_thread_id(update.message.message_thread_id)
-        votes = list(
+        attendees = list(
             map(
-                lambda vote: f"User {vote.telegram_user.message_username} {'will' if vote.go else 'will NOT'} attend training on {training.date}",
-                db_votes,
+                lambda attendee: f"User {attendee.telegram_user.message_username} {'will' if attendee.go else 'will NOT'} attend training on {training.date} (source: {attendee.source})",
+                db_attendees,
             )
         )
-        attendees = "\n".join(votes[: training.max_people])
-        waiting_list = "\n".join(votes[training.max_people :])
+        formatted_attendees = "\n".join(attendees[: training.max_people])
+        formatted_waiting_list = "\n".join(attendees[training.max_people :])
         await update.message.reply_html(
-            f"Attendees:\n{attendees}\n\n\nWaiting list:\n{waiting_list}"
+            f"Attendees:\n{formatted_attendees}\n\n\nWaiting list:\n{formatted_waiting_list}"
         )
     except Exception as exception:
         await update.message.reply_html(

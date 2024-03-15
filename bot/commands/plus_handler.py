@@ -4,9 +4,10 @@ from telegram.ext import ContextTypes, ConversationHandler
 from bot.asynchronous import aatomic
 from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_user
 from bot.helpers.get_training_by_thread_id import get_training_by_thread_id
-from bot.helpers.record_vote import record_vote
+from bot.helpers.record_attendee import record_attendee
 from django.conf import settings
 from ..helpers.format_exception import format_exception
+from ..models import PLUS_ONE_COMMAND_SOURCE
 
 
 @aatomic
@@ -21,7 +22,7 @@ async def plus_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         telegram_user = await get_and_update_telegram_user(effective_user)
 
         # Record a vote
-        await record_vote(training.poll, telegram_user)
+        await record_attendee(training, telegram_user, PLUS_ONE_COMMAND_SOURCE)
 
         # Submit a notification
         text_message = f"User {telegram_user.message_username} will attend training on {training.date}"
