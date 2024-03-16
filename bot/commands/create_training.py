@@ -19,7 +19,7 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         lines = update.message.text.split("\n")
         thread_name = lines[1].strip()
         poll_question = lines[2].strip()
-        max_people = int(lines[3].strip())
+        attendees_limit = int(lines[3].strip())
 
         date_string = lines[4].strip()
         date_matches = re.match("^(\d{4})-(\d{2})-(\d{2})$", date_string)
@@ -38,7 +38,7 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )()
         await sync_to_async(
             lambda: Training.objects.create(
-                poll=poll, max_people=max_people, date=training_day
+                poll=poll, attendees_limit=attendees_limit, date=training_day
             )
         )()
 
