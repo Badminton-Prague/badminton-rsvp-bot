@@ -1,7 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from bot.asynchronous import aatomic
 from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_user
 from bot.helpers.get_training_by_thread_id import get_training_by_thread_id
 from bot.helpers.record_attendee import record_attendee
@@ -10,7 +9,6 @@ from ..helpers.format_exception import format_exception
 from ..models import PLUS_ONE_COMMAND_SOURCE
 
 
-@aatomic
 async def plus_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     effective_user = update.effective_user
 

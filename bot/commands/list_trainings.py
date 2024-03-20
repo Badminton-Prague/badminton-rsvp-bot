@@ -2,13 +2,11 @@ from types import SimpleNamespace
 from asgiref.sync import sync_to_async
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
-from bot.asynchronous import aatomic
 from bot.models import Training
 from ..helpers.format_exception import format_exception
 from ..helpers.safe_get import safe_get
 
 
-@aatomic
 async def list_trainings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
         most_recent_count = int(safe_get(context.args, 0, 10))

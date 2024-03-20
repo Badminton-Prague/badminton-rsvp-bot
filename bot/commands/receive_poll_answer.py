@@ -1,6 +1,5 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
-from bot.asynchronous import aatomic
 from bot.helpers.get_training_by_poll_id import get_training_by_poll_id
 from bot.helpers.record_attendee import record_attendee
 from bot.helpers.retract_first_vote import retract_first_vote
@@ -10,7 +9,6 @@ from ..helpers.format_exception import format_exception
 from ..models import POLL_VOTE_SOURCE
 
 
-@aatomic
 async def receive_poll_answer(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:

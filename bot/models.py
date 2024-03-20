@@ -1,7 +1,22 @@
 from django.db import models
 
 
+class Training(models.Model):
+    attendees_limit = models.IntegerField(default=0)
+    date = models.DateField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 class Poll(models.Model):
+    training = models.OneToOneField(
+        Training,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=True,
+        related_name="poll",
+    )
+
     thread_name = models.TextField(max_length=128, db_index=True)
     thread_id = models.IntegerField(db_index=True, null=True)
 
@@ -10,21 +25,6 @@ class Poll(models.Model):
 
     chat_id = models.BigIntegerField(db_index=True)
     message_id = models.IntegerField(db_index=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class Training(models.Model):
-    attendees_limit = models.IntegerField(default=0)
-    poll = models.OneToOneField(
-        Poll,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=True,
-        related_name="training",
-    )
-    date = models.DateField(null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

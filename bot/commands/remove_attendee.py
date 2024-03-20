@@ -2,7 +2,6 @@ from asgiref.sync import sync_to_async
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from bot.helpers.get_training_by_thread_id import get_training_by_thread_id
 from bot.models import Attendee
 from ..decorator import restrict_to_telegram_users
 from ..helpers.format_exception import format_exception

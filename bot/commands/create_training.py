@@ -1,21 +1,20 @@
-from ..models import Training
-from ..models import Poll
-from ..helpers.format_exception import format_exception
-from telegram import Update
-from telegram.ext import ContextTypes, ConversationHandler
-from asgiref.sync import sync_to_async
-from django.conf import settings
-from ..asynchronous import aatomic
 import re
 from datetime import date
+from django.db import transaction
+from asgiref.sync import sync_to_async
+from django.conf import settings
+from telegram import Update
+from telegram.ext import ContextTypes, ConversationHandler
+
+from ..helpers.format_exception import format_exception
+from ..models import Poll
+from ..models import Training
 
 
-@aatomic
 async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Sends a predefined poll"""
 
     try:
-
         lines = update.message.text.split("\n")
         thread_name = lines[1].strip()
         poll_question = lines[2].strip()
@@ -31,14 +30,18 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         poll_options = settings.POLL_OPTIONS
         chat_id = settings.BADMINTON_CHAT_ID
 
-        poll = await sync_to_async(
-            lambda: Poll.objects.create(
-                chat_id=chat_id, poll_question=poll_question, thread_name=thread_name
+        training = await sync_to_async(
+            lambda: Training.objects.create(
+                attendees_limit=attendees_limit, date=training_day
             )
         )()
-        await sync_to_async(
-            lambda: Training.objects.create(
-                poll=poll, attendees_limit=attendees_limit, date=training_day
+
+        poll = await sync_to_async(
+            lambda: Poll.objects.create(
+                chat_id=chat_id,
+                poll_question=poll_question,
+                thread_name=thread_name,
+                training=training,
             )
         )()
 
