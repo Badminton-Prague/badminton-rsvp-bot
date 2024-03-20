@@ -7,7 +7,5 @@ async def get_training_by_thread_id(
     message_thread_id: int,
 ) -> Optional[Training]:
     return await sync_to_async(
-        lambda: Training.objects.filter(poll__thread_id=message_thread_id)
-        .prefetch_related("poll")
-        .first()
+        lambda: Training.objects.filter(poll__thread_id=message_thread_id).first()
     )()

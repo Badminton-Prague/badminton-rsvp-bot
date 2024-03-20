@@ -1,11 +1,26 @@
 from django.db import models
+from bot.managers import TrainingManager
 
 
 class Training(models.Model):
+    objects = TrainingManager()
+
     attendees_limit = models.IntegerField(default=0)
     date = models.DateField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def active_attendees(self):
+        return list(
+            self.attendees.filter(go=True).order_by("id")[: self.attendees_limit]
+        )
+
+    @property
+    def waiting_attendees(self):
+        return list(
+            self.attendees.filter(go=True).order_by("id")[self.attendees_limit :]
+        )
 
 
 class Poll(models.Model):

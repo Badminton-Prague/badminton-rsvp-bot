@@ -32,6 +32,7 @@ services:
       - .env
     volumes:
       - ./bot:/bot
+      - ./templates:/templates
       - ./vercel_app:/vercel_app
       - ./requirements.txt:/requirements.txt
       - ./manage.py:/manage.py

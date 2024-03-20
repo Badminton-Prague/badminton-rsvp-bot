@@ -1,0 +1,7 @@
+Error occurred while {{ action }}:
+
+{{ exception }}
+
+Traceback:
+{% for line in traceback %}
+{{ line }}{% endfor %}
