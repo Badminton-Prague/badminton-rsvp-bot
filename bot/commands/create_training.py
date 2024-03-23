@@ -6,6 +6,9 @@ from django.conf import settings
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from typing import NamedTuple
+
+from ..asynchronous import awaitable_to_coroutine
+from ..asynchronous import MAIN_EVENT_LOOP
 from ..helpers.format_exception import format_exception
 from ..models import Poll
 from ..models import Training
@@ -59,13 +62,13 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 training=training,
             )
 
-            new_topic = asyncio.new_event_loop().run_until_complete(
+            new_topic = MAIN_EVENT_LOOP.run_until_complete(
                 context.bot.createForumTopic(
                     settings.BADMINTON_CHAT_ID, args.thread_name
-                ),
+                )
             )
 
-            asyncio.new_event_loop().run_until_complete(
+            message = MAIN_EVENT_LOOP.run_until_complete(
                 context.bot.send_poll(
                     chat_id,
                     args.poll_question,
@@ -76,23 +79,12 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 )
             )
 
-            message = asyncio.run(
-                context.bot.send_poll(
-                    chat_id,
-                    args.poll_question,
-                    poll_options,
-                    is_anonymous=False,
-                    allows_multiple_answers=False,
-                    message_thread_id=new_topic.message_thread_id,
-                )
-            )
-
-            asyncio.run(
+            MAIN_EVENT_LOOP.run_until_complete(
                 context.bot.pin_chat_message(message.chat_id, message.message_id)
             )
 
     try:
-        await sync_to_async(executor)()
+        await sync_to_async(executor, thread_sensitive=True)()
 
     except Exception as exception:
         await update.message.reply_html(

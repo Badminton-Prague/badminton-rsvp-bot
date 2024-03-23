@@ -7,6 +7,8 @@ from telegram.ext import (
     filters,
     PollAnswerHandler,
 )
+
+from bot.asynchronous import MAIN_EVENT_LOOP
 from bot.commands.list_trainings import list_trainings
 from bot.commands.create_training import create_training
 from bot.commands.plus_handler import plus_handler
@@ -50,6 +52,7 @@ async def _run_telegram_bot_coro():
 
 
 def _run_telegram_bot():
+    asyncio.set_event_loop(MAIN_EVENT_LOOP)
     asyncio.run(_run_telegram_bot_coro())
 
 
