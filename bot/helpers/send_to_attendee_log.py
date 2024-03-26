@@ -9,7 +9,7 @@ async def send_to_attendee_log(bot: Bot, attendee: Attendee):
         "send_to_attendee_log.txt", dict(attendee=attendee)
     )
     await bot.send_message(
-        chat_id=settings.SYSTEM_LOG_CHAT_ID,
-        message_thread_id=settings.SYSTEM_LOG_THREAD_ID,
+        chat_id=settings.ATTENDEE_LOG_CHAT_ID,
+        message_thread_id=settings.ATTENDEE_LOG_THREAD_ID,
         text=rendered_message,
     )

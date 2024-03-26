@@ -1,4 +1,4 @@
 {{ most_recent_count }} recent trainings:
 
 {% for training in trainings %}
-{{ forloop.counter }}: {{ training.poll.thread_name }} on {{ training.date }} (attendees limit - {{ training.attendees_limit }} / go - {{ training.active_attendees|length }} / waiting - {{ training.waiting_attendees|length }}){% endfor %}
+{{ training.id}} : {{ training.poll.thread_name }} on {{ training.date }} (attendees limit - {{ training.attendees_limit }} / go - {{ training.active_attendees|length }} / waiting - {{ training.waiting_attendees|length }}){% endfor %}

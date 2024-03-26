@@ -1,7 +1,7 @@
 from bot.models import TelegramUser, Training, Attendee, POLL_VOTE_SOURCE
+from typing import Optional
 
-
-def retract_first_vote(training: Training, telegram_user: TelegramUser) -> Attendee:
+def retract_first_vote(training: Training, telegram_user: TelegramUser) -> Optional[Attendee]:
     first_poll_vote = (
         Attendee.objects.filter(
             training=training,
@@ -14,9 +14,7 @@ def retract_first_vote(training: Training, telegram_user: TelegramUser) -> Atten
     )
 
     if first_poll_vote is None:
-        raise Exception(
-            f"No first attendee for telegram_user {telegram_user.telegram_id} found"
-        )
+        return None
 
     Attendee.objects.filter(pk=first_poll_vote.pk).update(go=False)
     first_poll_vote.go = False

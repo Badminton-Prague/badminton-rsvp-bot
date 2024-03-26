@@ -49,13 +49,6 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             attendees_limit=args.attendees_limit, date=args.training_date
         )
 
-        poll = Poll.objects.create(
-            chat_id=chat_id,
-            poll_question=args.poll_question,
-            thread_name=args.thread_name,
-            training=training,
-        )
-
         new_topic = MAIN_EVENT_LOOP.run_until_complete(
             context.bot.createForumTopic(settings.BADMINTON_CHAT_ID, args.thread_name)
         )
@@ -69,6 +62,16 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 allows_multiple_answers=False,
                 message_thread_id=new_topic.message_thread_id,
             )
+        )
+
+        Poll.objects.create(
+            chat_id=chat_id,
+            message_id=message.message_id,
+            poll_id=message.poll.id,
+            poll_question=args.poll_question,
+            thread_id=new_topic.message_thread_id,
+            thread_name=args.thread_name,
+            training=training,
         )
 
         MAIN_EVENT_LOOP.run_until_complete(

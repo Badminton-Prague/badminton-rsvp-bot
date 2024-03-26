@@ -47,7 +47,8 @@ async def receive_poll_answer(
 
     try:
         attendee = await sync_to_async(executor)()
-        await send_to_attendee_log(context.bot, attendee)
+        if attendee is not None:
+            await send_to_attendee_log(context.bot, attendee)
 
     except Exception as exception:
         await report_exception("receiving a poll answer", exception, bot=context.bot)
