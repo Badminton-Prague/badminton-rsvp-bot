@@ -7,12 +7,10 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from typing import NamedTuple
 
-from ..asynchronous import awaitable_to_coroutine
 from ..asynchronous import MAIN_EVENT_LOOP
-from ..helpers.format_exception import format_exception
+from ..helpers.report_exception import report_exception
 from ..models import Poll
 from ..models import Training
-import asyncio
 
 
 class CommandArgs(NamedTuple):
@@ -38,57 +36,53 @@ def parse_command_args(command: str) -> CommandArgs:
     return CommandArgs(thread_name, poll_question, attendees_limit, training_date)
 
 
-async def asyncify(fun):
-    return await fun()
-
-
 async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Sends a predefined poll"""
 
-    def executor():
-        with transaction.atomic():
-            args = parse_command_args(update.message.text)
-            poll_options = settings.POLL_OPTIONS
-            chat_id = settings.BADMINTON_CHAT_ID
+    @transaction.atomic()
+    def executor() -> Training:
+        args = parse_command_args(update.message.text)
+        poll_options = settings.POLL_OPTIONS
+        chat_id = settings.BADMINTON_CHAT_ID
 
-            training = Training.objects.create(
-                attendees_limit=args.attendees_limit, date=args.training_date
-            )
+        training = Training.objects.create(
+            attendees_limit=args.attendees_limit, date=args.training_date
+        )
 
-            poll = Poll.objects.create(
-                chat_id=chat_id,
-                poll_question=args.poll_question,
-                thread_name=args.thread_name,
-                training=training,
-            )
+        poll = Poll.objects.create(
+            chat_id=chat_id,
+            poll_question=args.poll_question,
+            thread_name=args.thread_name,
+            training=training,
+        )
 
-            new_topic = MAIN_EVENT_LOOP.run_until_complete(
-                context.bot.createForumTopic(
-                    settings.BADMINTON_CHAT_ID, args.thread_name
-                )
-            )
+        new_topic = MAIN_EVENT_LOOP.run_until_complete(
+            context.bot.createForumTopic(settings.BADMINTON_CHAT_ID, args.thread_name)
+        )
 
-            message = MAIN_EVENT_LOOP.run_until_complete(
-                context.bot.send_poll(
-                    chat_id,
-                    args.poll_question,
-                    poll_options,
-                    is_anonymous=False,
-                    allows_multiple_answers=False,
-                    message_thread_id=new_topic.message_thread_id,
-                )
+        message = MAIN_EVENT_LOOP.run_until_complete(
+            context.bot.send_poll(
+                chat_id,
+                args.poll_question,
+                poll_options,
+                is_anonymous=False,
+                allows_multiple_answers=False,
+                message_thread_id=new_topic.message_thread_id,
             )
+        )
 
-            MAIN_EVENT_LOOP.run_until_complete(
-                context.bot.pin_chat_message(message.chat_id, message.message_id)
-            )
+        MAIN_EVENT_LOOP.run_until_complete(
+            context.bot.pin_chat_message(message.chat_id, message.message_id)
+        )
+
+        return training
 
     try:
-        await sync_to_async(executor, thread_sensitive=True)()
+        await sync_to_async(executor)()
 
     except Exception as exception:
-        await update.message.reply_html(
-            format_exception("posting a new training", exception)
+        await report_exception(
+            "posting a new training", exception, bot=context.bot, message=update.message
         )
 
     finally:

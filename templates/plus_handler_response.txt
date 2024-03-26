@@ -1,0 +1,1 @@
+{{ attendee.telegram_user.simple_username }} +1 added OK

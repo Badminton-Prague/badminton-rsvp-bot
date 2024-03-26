@@ -1,0 +1,4 @@
+{% if attendee.go %}User {{ attendee.telegram_user.full_username }} WILL attend training on {{ attendee.training.date }}
+{% else %}
+User {{ attendee.telegram_user.full_username }} WILL NOT attend training on {{ attendee.training.date }}
+{%endif%}

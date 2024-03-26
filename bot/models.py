@@ -1,5 +1,6 @@
 from django.db import models
 from bot.managers import TrainingManager
+from bot.managers import AttendeeManager
 
 
 class Training(models.Model):
@@ -55,14 +56,21 @@ class TelegramUser(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
-    def message_username(self):
+    def full_username(self):
         if self.username:
             return f"@{self.username} (id: {self.telegram_id})"
         else:
             return f"{self.first_name} {self.last_name} (id: {self.telegram_id})"
 
+    @property
+    def simple_username(self):
+        if self.username:
+            return f"@{self.username}"
+        else:
+            return f"{self.first_name} {self.last_name if self.last_name is not None else ''}".strip()
+
     def __str__(self):
-        return self.message_username
+        return self.full_username
 
 
 PLUS_ONE_COMMAND_SOURCE = "PLUS_ONE_COMMAND"
@@ -75,6 +83,8 @@ ATTENDEE_SOURCE_CHOICES = [
 
 
 class Attendee(models.Model):
+    objects = AttendeeManager()
+
     training = models.ForeignKey(
         Training,
         on_delete=models.CASCADE,

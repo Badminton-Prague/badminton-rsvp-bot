@@ -1,39 +1,43 @@
+from asgiref.sync import sync_to_async
+from django.db import transaction
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_user
-from bot.helpers.get_training_by_thread_id import get_training_by_thread_id
 from bot.helpers.record_attendee import record_attendee
-from django.conf import settings
-from ..helpers.format_exception import format_exception
-from ..models import PLUS_ONE_COMMAND_SOURCE
+from ..helpers.async_render_to_string import async_render_to_string
+from ..helpers.report_exception import report_exception
+from ..helpers.send_to_attendee_log import send_to_attendee_log
+from ..models import PLUS_ONE_COMMAND_SOURCE, Training, TelegramUser
+from bot.models import Attendee
 
 
 async def plus_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    effective_user = update.effective_user
+    @transaction.atomic()
+    def executor() -> Attendee:
+        effective_user = update.effective_user
+
+        training = Training.objects.filter(
+            poll__thread_id=update.message.message_thread_id
+        ).first()
+        if training is None:
+            raise Exception(
+                f"No training found by thread ID#{update.message.message_thread_id}"
+            )
+
+        telegram_user = get_and_update_telegram_user(effective_user)
+        return record_attendee(training, telegram_user, PLUS_ONE_COMMAND_SOURCE)
 
     try:
-        training = await get_training_by_thread_id(update.message.message_thread_id)
-        if training is None:
-            return ConversationHandler.END
-
-        telegram_user = await get_and_update_telegram_user(effective_user)
-
-        # Record a vote
-        await record_attendee(training, telegram_user, PLUS_ONE_COMMAND_SOURCE)
-
-        # Submit a notification
-        text_message = f"User {telegram_user.message_username} will attend training on {training.date}"
-        await update.message.reply_text(text_message)
-        await context.bot.send_message(
-            chat_id=settings.SYSTEM_LOG_CHAT_ID,
-            message_thread_id=settings.SYSTEM_LOG_THREAD_ID,
-            text=text_message,
+        attendee = await sync_to_async(executor)()
+        rendered_message = await async_render_to_string(
+            "plus_handler_response.txt", dict(attendee=attendee)
         )
-        return ConversationHandler.END
+        await update.message.reply_text(rendered_message)
+        await send_to_attendee_log(context.bot, attendee)
 
     except Exception as exception:
-        await update.message.reply_html(format_exception("recording a vote", exception))
+        await report_exception("handling +1", exception, bot=context.bot)
 
     finally:
         return ConversationHandler.END

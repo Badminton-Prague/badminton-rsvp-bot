@@ -1,0 +1,12 @@
+Training #{{ training.id }}
+Capacity: {{ training.attendees_limit }}
+Attendees: {{ training.active_attendees|length }}, Waiting list: {{ training.waiting_attendees|length }}
+
+Attendees:
+{% for attendee in training.active_attendees %}
+{{ forloop.counter }}. {{ attendee.full_username }} ({{ attendee.source }}, id {{ attendee.id }}){% endfor %}
+
+Waiting list:
+
+{% for attendee in training.waiting_attendees %}
+{{ forloop.counter }}. {{ attendee.full_username }} ({{ attendee.source }}, id {{ attendee.id }}){% endfor %}

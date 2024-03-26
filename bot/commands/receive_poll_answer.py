@@ -1,72 +1,56 @@
+from asgiref.sync import sync_to_async
+from django.conf import settings
+from django.db import transaction
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
-from bot.helpers.get_training_by_poll_id import get_training_by_poll_id
+
+from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_user
 from bot.helpers.record_attendee import record_attendee
 from bot.helpers.retract_first_vote import retract_first_vote
-from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_user
-from django.conf import settings
-from ..helpers.format_exception import format_exception
+from bot.helpers.send_to_attendee_log import send_to_attendee_log
+from ..helpers.report_exception import report_exception
+from ..models import Attendee
 from ..models import POLL_VOTE_SOURCE
+from ..models import Training
 
 
 async def receive_poll_answer(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    """Summarize a users poll vote"""
-    poll_answer = update.poll_answer
-    effective_user = update.effective_user
 
-    try:
-        # Find training's details
-        training = await get_training_by_poll_id(poll_answer.poll_id)
+    @transaction.atomic()
+    def executor() -> Attendee:
+        """Summarize a users poll vote"""
+        poll_answer = update.poll_answer
+        effective_user = update.effective_user
+        training = Training.objects.filter(poll__poll_id=poll_answer.poll_id).first()
         if training is None:
-            return ConversationHandler.END
-        poll = training.poll
+            raise Exception(f"No training found for poll {poll_answer.poll_id}")
 
         # Update a user
-        telegram_user = await get_and_update_telegram_user(effective_user)
+        telegram_user = get_and_update_telegram_user(effective_user)
 
         # Record a vote
+        attendee = None
         selected_option_ids = poll_answer.option_ids
         if len(selected_option_ids) == 0:
-            await retract_first_vote(training, telegram_user)
+            attendee = retract_first_vote(training, telegram_user)
         else:
             selected_option = settings.POLL_OPTIONS[selected_option_ids[0]]
 
             if selected_option == settings.POLL_GO_OPTION:
-                await record_attendee(training, telegram_user, POLL_VOTE_SOURCE)
-
-                text_message = f"User {telegram_user.message_username} will attend training on {training.date}"
-                await context.bot.send_message(
-                    chat_id=poll.chat_id,
-                    message_thread_id=poll.thread_id,
-                    text=text_message,
-                )
-                await context.bot.send_message(
-                    chat_id=settings.SYSTEM_LOG_CHAT_ID,
-                    message_thread_id=settings.SYSTEM_LOG_THREAD_ID,
-                    text=text_message,
-                )
+                attendee = record_attendee(training, telegram_user, POLL_VOTE_SOURCE)
             elif selected_option == settings.POLL_NO_GO_OPTION:
-                await retract_first_vote(training, telegram_user)
+                attendee = retract_first_vote(training, telegram_user)
 
-                text_message = f"User {telegram_user.message_username} will NOT attend training on {training.date}"
-                await context.bot.send_message(
-                    chat_id=poll.chat_id,
-                    message_thread_id=poll.thread_id,
-                    text=text_message,
-                )
-                await context.bot.send_message(
-                    chat_id=settings.SYSTEM_LOG_CHAT_ID,
-                    message_thread_id=settings.SYSTEM_LOG_THREAD_ID,
-                    text=text_message,
-                )
+        return attendee
+
+    try:
+        attendee = await sync_to_async(executor)()
+        await send_to_attendee_log(context.bot, attendee)
+
     except Exception as exception:
-        await context.bot.send_message(
-            chat_id=settings.SYSTEM_LOG_CHAT_ID,
-            message_thread_id=settings.SYSTEM_LOG_THREAD_ID,
-            text=format_exception("recording a poll vote", exception),
-        )
+        await report_exception("receiving a poll answer", exception, bot=context.bot)
 
     finally:
         return ConversationHandler.END
