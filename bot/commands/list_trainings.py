@@ -1,11 +1,12 @@
+from django.db import transaction
+from django.template.loader import render_to_string
 from telegram import Update
 from telegram.ext import ContextTypes
+
 from bot.models import Training
 from ..asynchronous import asyncify
 from ..decorator import catch_all_exceptions_in_tg_handlers
 from ..helpers.safe_get import safe_get
-from django.template.loader import render_to_string
-from django.db import transaction
 
 
 @transaction.atomic()

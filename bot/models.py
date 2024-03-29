@@ -102,3 +102,15 @@ class Attendee(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+DISABLE_PLUS_ONE_COMMAND = "DISABLE_PLUS_ONE_COMMAND"
+FEATURE_FLAG_CHOICES = [
+    (PLUS_ONE_COMMAND_SOURCE, "Disable +1"),
+]
+
+
+class FeatureFlag(models.Model):
+    feature_flag = models.CharField(
+        max_length=128, choices=FEATURE_FLAG_CHOICES, unique=True
+    )

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from bot.models import Poll, Training, TelegramUser, Attendee
+from bot.models import Poll, Training, TelegramUser, Attendee, FeatureFlag
 
 
 class PollAdmin(admin.ModelAdmin):
@@ -75,7 +75,14 @@ class AttendeeAdmin(admin.ModelAdmin):
         return obj.telegram_user
 
 
+class FeatureFlagAdmin(admin.ModelAdmin):
+    list_display = ("feature_flag",)
+
+    search_fields = ("feature_flag",)
+
+
 admin.site.register(Poll, PollAdmin)
 admin.site.register(Training, TrainingAdmin)
 admin.site.register(TelegramUser, TelegramUserAdmin)
 admin.site.register(Attendee, AttendeeAdmin)
+admin.site.register(FeatureFlag, FeatureFlagAdmin)

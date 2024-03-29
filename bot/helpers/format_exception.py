@@ -8,6 +8,6 @@ def format_exception(action: str, exception: Exception) -> str:
         dict(
             action=action,
             exception=str(exception),
-            traceback=traceback.format_tb(exception.__traceback__, 5),
+            traceback=traceback.format_tb(exception.__traceback__, 7),
         ),
     )

@@ -1,10 +1,11 @@
 import re
 from datetime import date
-from django.db import transaction
-from django.conf import settings
-from telegram import Update, Message, ForumTopic
-from telegram.ext import ContextTypes, ConversationHandler
 from typing import NamedTuple
+
+from django.conf import settings
+from django.db import transaction
+from telegram import Update, Message, ForumTopic
+from telegram.ext import ContextTypes
 
 from ..asynchronous import asyncify
 from ..decorator import catch_all_exceptions_in_tg_handlers
@@ -75,4 +76,4 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await context.bot.pin_chat_message(message.chat_id, message.message_id)
-    await asyncify(db_transaction, args, chat_id, message, forum_topic)
+    await asyncify(db_transaction, (args, chat_id, message, forum_topic))
