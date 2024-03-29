@@ -1,14 +1,13 @@
 import re
 from datetime import date
 from django.db import transaction
-from asgiref.sync import sync_to_async
 from django.conf import settings
-from telegram import Update
+from telegram import Update, Message, ForumTopic
 from telegram.ext import ContextTypes, ConversationHandler
 from typing import NamedTuple
 
-from ..asynchronous import MAIN_EVENT_LOOP
-from ..helpers.report_exception import report_exception
+from ..asynchronous import asyncify
+from ..decorator import catch_all_exceptions_in_tg_handlers
 from ..models import Poll
 from ..models import Training
 
@@ -36,57 +35,44 @@ def parse_command_args(command: str) -> CommandArgs:
     return CommandArgs(thread_name, poll_question, attendees_limit, training_date)
 
 
-async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+@transaction.atomic()
+def db_transaction(
+    args: CommandArgs, chat_id: int, message: Message, forum_topic: ForumTopic
+):
+    training = Training.objects.create(
+        attendees_limit=args.attendees_limit, date=args.training_date
+    )
+
+    Poll.objects.create(
+        chat_id=chat_id,
+        message_id=message.message_id,
+        poll_id=message.poll.id,
+        poll_question=args.poll_question,
+        thread_id=forum_topic.message_thread_id,
+        thread_name=args.thread_name,
+        training=training,
+    )
+
+
+@catch_all_exceptions_in_tg_handlers("posting a new training")
+async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sends a predefined poll"""
+    args = parse_command_args(update.message.text)
+    poll_options = settings.POLL_OPTIONS
+    chat_id = settings.BADMINTON_CHAT_ID
 
-    @transaction.atomic()
-    def executor() -> Training:
-        args = parse_command_args(update.message.text)
-        poll_options = settings.POLL_OPTIONS
-        chat_id = settings.BADMINTON_CHAT_ID
+    forum_topic = await context.bot.createForumTopic(
+        settings.BADMINTON_CHAT_ID, args.thread_name
+    )
 
-        training = Training.objects.create(
-            attendees_limit=args.attendees_limit, date=args.training_date
-        )
+    message = await context.bot.send_poll(
+        chat_id,
+        args.poll_question,
+        poll_options,
+        is_anonymous=False,
+        allows_multiple_answers=False,
+        message_thread_id=forum_topic.message_thread_id,
+    )
 
-        new_topic = MAIN_EVENT_LOOP.run_until_complete(
-            context.bot.createForumTopic(settings.BADMINTON_CHAT_ID, args.thread_name)
-        )
-
-        message = MAIN_EVENT_LOOP.run_until_complete(
-            context.bot.send_poll(
-                chat_id,
-                args.poll_question,
-                poll_options,
-                is_anonymous=False,
-                allows_multiple_answers=False,
-                message_thread_id=new_topic.message_thread_id,
-            )
-        )
-
-        Poll.objects.create(
-            chat_id=chat_id,
-            message_id=message.message_id,
-            poll_id=message.poll.id,
-            poll_question=args.poll_question,
-            thread_id=new_topic.message_thread_id,
-            thread_name=args.thread_name,
-            training=training,
-        )
-
-        MAIN_EVENT_LOOP.run_until_complete(
-            context.bot.pin_chat_message(message.chat_id, message.message_id)
-        )
-
-        return training
-
-    try:
-        await sync_to_async(executor)()
-
-    except Exception as exception:
-        await report_exception(
-            "posting a new training", exception, bot=context.bot, message=update.message
-        )
-
-    finally:
-        return ConversationHandler.END
+    await context.bot.pin_chat_message(message.chat_id, message.message_id)
+    await asyncify(db_transaction, args, chat_id, message, forum_topic)

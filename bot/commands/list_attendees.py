@@ -1,34 +1,30 @@
-from asgiref.sync import sync_to_async
 from telegram import Update
-from telegram.ext import ContextTypes, ConversationHandler
+from telegram.ext import ContextTypes
 from django.db import transaction
-
 from bot.models import Attendee, Training
+from ..asynchronous import asyncify
+from ..decorator import catch_all_exceptions_in_tg_handlers
 from ..helpers.safe_get import safe_get
-from ..helpers.report_exception import report_exception
 from django.template.loader import render_to_string
 
 
-async def list_attendees(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    @transaction.atomic()
-    def executor():
-        training_id = safe_get(context.args, 0, None)
+@transaction.atomic()
+def db_transaction(
+    message_thread_id: int,
+    training_id: int = None,
+) -> str:
+    training = (
+        Training.objects.filter(pk=training_id).first()
+        if training_id is not None
+        else Training.objects.filter(poll__thread_id=message_thread_id).first()
+    )
+    return render_to_string("list_attendees_response.txt", dict(training=training))
 
-        training = (
-            Training.objects.filter(pk=training_id).first()
-            if training_id is not None
-            else Training.objects.filter(
-                poll__thread_id=update.message.message_thread_id
-            ).first()
-        )
-        return render_to_string("list_attendees_response.txt", dict(training=training))
 
-    try:
-        rendered_message = await sync_to_async(executor)()
-        await update.message.reply_html(rendered_message)
-
-    except Exception as exception:
-        await report_exception("listing attendees", exception, message=update.message)
-
-    finally:
-        return ConversationHandler.END
+@catch_all_exceptions_in_tg_handlers("listing attendees")
+async def list_attendees(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    training_id = safe_get(context.args, 0, None)
+    rendered_message = await asyncify(
+        db_transaction, update.message.message_thread_id, training_id
+    )
+    await update.message.reply_html(rendered_message)

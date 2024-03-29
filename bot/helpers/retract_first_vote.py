@@ -1,7 +1,10 @@
 from bot.models import TelegramUser, Training, Attendee, POLL_VOTE_SOURCE
 from typing import Optional
 
-def retract_first_vote(training: Training, telegram_user: TelegramUser) -> Optional[Attendee]:
+
+def retract_first_vote(
+    training: Training, telegram_user: TelegramUser
+) -> Optional[Attendee]:
     first_poll_vote = (
         Attendee.objects.filter(
             training=training,
