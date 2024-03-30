@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.models import Training
-from ..asynchronous import asyncify
+from bot.helpers.run_sync_function_in_executor import run_sync_function_in_executor
 from ..decorator import catch_all_exceptions_in_tg_handlers
 from ..helpers.safe_get import safe_get
 
@@ -25,7 +25,11 @@ def db_transaction(
 @catch_all_exceptions_in_tg_handlers("listing attendees")
 async def list_attendees(update: Update, context: ContextTypes.DEFAULT_TYPE):
     training_id = safe_get(context.args, 0, None)
-    rendered_message = await asyncify(
-        db_transaction, update.message.message_thread_id, training_id
+    rendered_message = await run_sync_function_in_executor(
+        db_transaction,
+        arguments=(
+            update.message.message_thread_id,
+            training_id,
+        ),
     )
     await update.message.reply_html(rendered_message)

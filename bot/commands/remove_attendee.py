@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.models import Attendee
-from ..asynchronous import asyncify
+from bot.helpers.run_sync_function_in_executor import run_sync_function_in_executor
 from ..decorator import restrict_to_telegram_users, catch_all_exceptions_in_tg_handlers
 
 
@@ -29,5 +29,5 @@ def db_transaction(attendee_id: int) -> str:
 )
 async def remove_attendee(update: Update, context: ContextTypes.DEFAULT_TYPE):
     attendee_id = int(context.args[0])
-    rendered_message = await asyncify(db_transaction, attendee_id)
+    rendered_message = await run_sync_function_in_executor(db_transaction, arguments=(attendee_id,))
     await update.message.reply_html(rendered_message)

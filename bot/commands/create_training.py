@@ -7,7 +7,7 @@ from django.db import transaction
 from telegram import Update, Message, ForumTopic
 from telegram.ext import ContextTypes
 
-from ..asynchronous import asyncify
+from bot.helpers.run_sync_function_in_executor import run_sync_function_in_executor
 from ..decorator import catch_all_exceptions_in_tg_handlers
 from ..models import Poll
 from ..models import Training
@@ -76,4 +76,4 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await context.bot.pin_chat_message(message.chat_id, message.message_id)
-    await asyncify(db_transaction, (args, chat_id, message, forum_topic))
+    await run_sync_function_in_executor(db_transaction, arguments=(args, chat_id, message, forum_topic))

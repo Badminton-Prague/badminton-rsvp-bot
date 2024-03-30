@@ -8,7 +8,7 @@ from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_use
 from bot.helpers.record_attendee import record_attendee
 from bot.helpers.retract_first_vote import retract_first_vote
 from bot.helpers.send_to_attendee_log import send_to_attendee_log
-from ..asynchronous import asyncify
+from bot.helpers.run_sync_function_in_executor import run_sync_function_in_executor
 from ..decorator import catch_all_exceptions_in_tg_handlers
 from ..models import Attendee
 from ..models import POLL_VOTE_SOURCE
@@ -45,6 +45,12 @@ def db_transaction(poll_answer: Update, effective_user: User) -> Attendee:
     "receiving a poll answer", respond_to_message=False
 )
 async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    attendee = await asyncify(db_transaction, update.poll_answer, update.effective_user)
+    attendee = await run_sync_function_in_executor(
+        db_transaction,
+        arguments=(
+            update.poll_answer,
+            update.effective_user,
+        ),
+    )
     if attendee is not None:
         await send_to_attendee_log(context.bot, attendee)

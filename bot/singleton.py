@@ -3,12 +3,10 @@ from telegram.ext import (
     Application,
     ConversationHandler,
     CommandHandler,
-    MessageHandler,
-    filters,
     PollAnswerHandler,
 )
 
-from bot.asynchronous import MAIN_EVENT_LOOP
+from bot.helpers.run_sync_function_in_executor import MAIN_EVENT_LOOP
 from bot.commands.list_trainings import list_trainings
 from bot.commands.create_training import create_training
 from bot.commands.plus_handler import plus_handler

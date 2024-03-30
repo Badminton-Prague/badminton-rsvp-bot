@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes
 from bot.helpers.get_and_update_telegram_user import get_and_update_telegram_user
 from bot.helpers.record_attendee import record_attendee
 from bot.models import Attendee
-from ..asynchronous import asyncify
+from bot.helpers.run_sync_function_in_executor import run_sync_function_in_executor
 from ..decorator import catch_all_exceptions_in_tg_handlers
 from ..helpers.async_render_to_string import async_render_to_string
 from ..helpers.send_to_attendee_log import send_to_attendee_log
@@ -40,7 +40,13 @@ def db_transaction(user: User, message: Message) -> Optional[Attendee]:
 
 @catch_all_exceptions_in_tg_handlers("handling +1", respond_to_message=False)
 async def plus_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    attendee = await asyncify(db_transaction, update.effective_user, update.message)
+    attendee = await run_sync_function_in_executor(
+        db_transaction,
+        arguments=(
+            update.effective_user,
+            update.message,
+        ),
+    )
     if attendee is None:
         return
     rendered_message = await async_render_to_string(
