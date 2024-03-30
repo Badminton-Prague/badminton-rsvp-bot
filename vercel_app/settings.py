@@ -75,13 +75,24 @@ TEMPLATES = [
     },
 ]
 
-BADMINTON_CHAT_ID = int(getenv("BADMINTON_CHAT_ID", "failed"))
+BADMINTON_CHAT_ID = int(getenv("BADMINTON_CHAT_ID", "0"))
 
-ATTENDEE_LOG_CHAT_ID = int(getenv("ATTENDEE_LOG_CHAT_ID", "failed"))
-ATTENDEE_LOG_THREAD_ID = int(getenv("ATTENDEE_LOG_THREAD_ID", "failed"))
+ATTENDEE_LOG_CHAT_ID = int(getenv("ATTENDEE_LOG_CHAT_ID", "0"))
+ATTENDEE_LOG_THREAD_ID = int(getenv("ATTENDEE_LOG_THREAD_ID", "0"))
 
-ERROR_LOG_CHAT_ID = int(getenv("ERROR_LOG_CHAT_ID", "failed"))
-ERROR_LOG_THREAD_ID = int(getenv("ERROR_LOG_THREAD_ID", "failed"))
+ERROR_LOG_CHAT_ID = int(getenv("ERROR_LOG_CHAT_ID", "0"))
+ERROR_LOG_THREAD_ID = int(getenv("ERROR_LOG_THREAD_ID", "0"))
+
+if (
+    BADMINTON_CHAT_ID == 0
+    or ATTENDEE_LOG_THREAD_ID == 0
+    or ATTENDEE_LOG_THREAD_ID == 0
+    or ERROR_LOG_THREAD_ID == 0
+    or ERROR_LOG_CHAT_ID == 0
+):
+    print(
+        "‼️‼️ One of BADMINTON_CHAT_ID, ATTENDEE_LOG_THREAD_ID, ATTENDEE_LOG_THREAD_ID,  ERROR_LOG_THREAD_ID or ERROR_LOG_CHAT_ID env variables not set"
+    )
 
 POLL_GO_OPTION = "Go!"
 POLL_NO_GO_OPTION = "No Go"

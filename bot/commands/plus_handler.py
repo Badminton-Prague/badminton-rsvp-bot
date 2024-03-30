@@ -21,6 +21,7 @@ from ..models import (
 
 @transaction.atomic()
 def db_transaction(user: User, message: Message) -> Optional[Attendee]:
+    all_feature_flags = list(FeatureFlag.objects.all())
     plus_one_command_disabled = (
         FeatureFlag.objects.filter(feature_flag=DISABLE_PLUS_ONE_COMMAND).first()
         is not None

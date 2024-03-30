@@ -106,11 +106,11 @@ class Attendee(models.Model):
 
 DISABLE_PLUS_ONE_COMMAND = "DISABLE_PLUS_ONE_COMMAND"
 FEATURE_FLAG_CHOICES = [
-    (PLUS_ONE_COMMAND_SOURCE, "Disable +1"),
+    (DISABLE_PLUS_ONE_COMMAND, "Disable +1"),
 ]
 
 
 class FeatureFlag(models.Model):
     feature_flag = models.CharField(
-        max_length=128, choices=FEATURE_FLAG_CHOICES, unique=True
+        max_length=128, choices=FEATURE_FLAG_CHOICES, unique=True, db_index=True
     )

@@ -29,5 +29,7 @@ def db_transaction(attendee_id: int) -> str:
 )
 async def remove_attendee(update: Update, context: ContextTypes.DEFAULT_TYPE):
     attendee_id = int(context.args[0])
-    rendered_message = await run_sync_function_in_executor(db_transaction, arguments=(attendee_id,))
+    rendered_message = await run_sync_function_in_executor(
+        db_transaction, arguments=(attendee_id,)
+    )
     await update.message.reply_html(rendered_message)

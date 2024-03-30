@@ -25,5 +25,7 @@ def db_transaction(most_recent_count: int) -> str:
 @catch_all_exceptions_in_tg_handlers("listing trainings")
 async def list_trainings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     most_recent_count = int(safe_get(context.args, 0, 10))
-    rendered_message = await run_sync_function_in_executor(db_transaction, arguments=(most_recent_count,))
+    rendered_message = await run_sync_function_in_executor(
+        db_transaction, arguments=(most_recent_count,)
+    )
     await update.message.reply_text(text=rendered_message)

@@ -76,4 +76,6 @@ async def create_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await context.bot.pin_chat_message(message.chat_id, message.message_id)
-    await run_sync_function_in_executor(db_transaction, arguments=(args, chat_id, message, forum_topic))
+    await run_sync_function_in_executor(
+        db_transaction, arguments=(args, chat_id, message, forum_topic)
+    )
